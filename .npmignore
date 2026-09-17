@@ -1,0 +1,12 @@
+src
+tests
+examples
+.github
+coverage
+*.log
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+eslint.config.js
+.prettierrc
+.prettierignore
