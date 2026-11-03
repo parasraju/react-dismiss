@@ -1,6 +1,6 @@
 {
   "name": "react-dismiss",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A tiny React hook for dismissing UI when users interact outside or press Escape.",
   "keywords": [
     "react",
@@ -17,7 +17,7 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/parasraju/react-dismiss.git"
+    "url": "git+https://github.com/parasraju/react-dismiss.git"
   },
   "bugs": {
     "url": "https://github.com/parasraju/react-dismiss/issues"

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Documentation and packaging release.
+- Streamlined and structured README for npm with copy-paste quick start, API specification, and behavior overview.
+
 ## 0.1.0
 
 - Initial release
