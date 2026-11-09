@@ -2,6 +2,8 @@
 
 A tiny React hook for dismissing UI when users interact outside or press Escape.
 
+**[Live Demo on CodeSandbox](https://codesandbox.io/s/xzwc87)**
+
 ## Installation
 
 ```bash
@@ -97,5 +99,6 @@ Ships with built-in TypeScript declarations and generics (`dist/index.d.ts`), no
 
 ## Links
 
+- **Live Demo**: [codesandbox.io/s/xzwc87](https://codesandbox.io/s/xzwc87)
 - **npm**: [npmjs.com/package/react-dismiss](https://www.npmjs.com/package/react-dismiss)
 - **GitHub**: [github.com/parasraju/react-dismiss](https://github.com/parasraju/react-dismiss)

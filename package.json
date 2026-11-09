@@ -1,6 +1,6 @@
 {
   "name": "react-dismiss",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A tiny React hook for dismissing UI when users interact outside or press Escape.",
   "keywords": [
     "react",
@@ -11,7 +11,9 @@
     "popover",
     "dropdown",
     "modal",
-    "typescript"
+    "typescript",
+    "click-away",
+    "useClickAway"
   ],
   "license": "MIT",
   "author": "",
