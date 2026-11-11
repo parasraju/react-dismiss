@@ -79,9 +79,29 @@ useDismiss<T extends HTMLElement>(
 
 `void`
 
+### Multiple refs — dismiss only outside all of them
+
+The first argument accepts one ref or several. Dismissal runs only when the event is outside all of them. A click inside any ref does not dismiss.
+
+```ts
+useDismiss([menuRef, panelRef], () => setIsOpen(false));
+```
+
+### Ignore option — clicks on ignored refs never dismiss
+
+`options.ignore` accepts one ref or several. Clicks on ignored refs never dismiss.
+
+```ts
+useDismiss(menuRef, () => setIsOpen(false), {
+  ignore: toggleRef,
+});
+```
+
 ## What It Handles
 
 - Outside interactions (`pointerdown` or `click`) while ignoring clicks on descendants inside `ref`.
+- Multiple refs: dismissal runs only when the interaction is outside all of them.
+- Ignore option: clicks on ignored refs never dismiss.
 - Escape key presses (`keydown` where `event.key === "Escape"`).
 - Null or unmounted refs without throwing errors.
 - Automatic event listener cleanup on component unmount or when options change.
@@ -96,6 +116,7 @@ Ships with built-in TypeScript declarations and generics (`dist/index.d.ts`), no
 - **Zero dependencies**: Only requires `react` (>= 18) as a peer dependency.
 - **Tiny footprint**: ~1.3 KB uncompressed ESM/CJS build (< 1 KB minified + gzipped).
 - **Ref-stable callback**: Passing inline callback functions will not re-bind document listeners on re-render.
+- One hook, not a hook library — no need to install a whole utilities package for a single outside-click handler.
 
 ## Links
 
