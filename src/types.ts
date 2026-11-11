@@ -19,4 +19,11 @@ export interface UseDismissOptions {
    * @default "pointerdown"
    */
   event?: "pointerdown" | "click";
+  /**
+   * Refs whose clicks never trigger dismissal. Accepts one ref or several.
+   * Useful for toggle buttons that live outside the dismissed element.
+   */
+  ignore?:
+    | React.RefObject<HTMLElement | null>
+    | React.RefObject<HTMLElement | null>[];
 }

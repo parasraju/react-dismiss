@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1
+
+- Implemented multiple refs: the first argument now accepts one ref or several; dismissal runs only when the interaction is outside all of them.
+- Implemented the `ignore` option: clicks on ignored refs (one ref or several) never dismiss.
+- Fixes 0.2.0, whose README documented these features before the code implemented them.
+
+## 0.2.0
+
+- New description and keywords for outside-click search (dropdown, popover, modal, click outside, useDismiss, react-hooks).
+- README headings for multiple refs and the ignore option.
+
 ## 0.1.1
 
 - Documentation and packaging release.

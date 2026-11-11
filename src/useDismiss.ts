@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import type { UseDismissOptions } from "./types.js";
 
 export function useDismiss<T extends HTMLElement>(
-  ref: React.RefObject<T | null>,
+  ref:
+    | React.RefObject<T | null>
+    | React.RefObject<T | null>[],
   onDismiss: () => void,
   options: UseDismissOptions = {},
 ): void {
@@ -11,6 +13,7 @@ export function useDismiss<T extends HTMLElement>(
     outside = true,
     escape = true,
     event = "pointerdown",
+    ignore,
   } = options;
 
   const onDismissRef = useRef(onDismiss);
@@ -26,12 +29,33 @@ export function useDismiss<T extends HTMLElement>(
     // but guard keeps logic safe if environment is non-DOM.
     if (typeof document === "undefined") return;
 
+    // Normalized inside the effect so the dep array stays honest: callers
+    // passing an inline array literal re-bind listeners on re-render, which
+    // is correct; stable useRef objects do not.
+    const refs = Array.isArray(ref) ? ref : [ref];
+    const ignoreRefs =
+      ignore === undefined
+        ? []
+        : Array.isArray(ignore)
+          ? ignore
+          : [ignore];
+
     const handleOutside = (e: Event) => {
-      const el = ref.current;
-      if (!el) return;
       const target = e.target;
       if (!(target instanceof Node)) return;
-      if (el.contains(target)) return;
+      // Only mounted refs count. With no mounted ref, there is no "inside",
+      // so nothing to dismiss from (same as the old single null-ref behavior).
+      const elements = refs
+        .map((r) => r.current)
+        .filter((el): el is T => el !== null);
+      if (elements.length === 0) return;
+      // Inside any ref: not a dismissal.
+      if (elements.some((el) => el.contains(target))) return;
+      // Inside an ignored ref: never dismiss.
+      const ignored = ignoreRefs
+        .map((r) => r.current)
+        .filter((el): el is HTMLElement => el !== null);
+      if (ignored.some((el) => el.contains(target))) return;
       onDismissRef.current();
     };
 
@@ -56,5 +80,5 @@ export function useDismiss<T extends HTMLElement>(
         document.removeEventListener("keydown", handleKeyDown);
       }
     };
-  }, [ref, enabled, outside, escape, event]);
+  }, [ref, ignore, enabled, outside, escape, event]);
 }

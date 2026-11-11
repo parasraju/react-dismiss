@@ -416,4 +416,135 @@ describe("useDismiss", () => {
     addSpy.mockRestore();
     unmount();
   });
+
+  // -------------------------------------------------------------------------
+  // Multiple refs
+  // -------------------------------------------------------------------------
+  function MultiRefComponent({
+    onDismiss,
+    attachSecond = true,
+  }: {
+    onDismiss: () => void;
+    attachSecond?: boolean;
+  }) {
+    const ref1 = useRef<HTMLDivElement>(null);
+    const ref2 = useRef<HTMLDivElement>(null);
+    useDismiss([ref1, ref2], onDismiss);
+    return (
+      <div>
+        <div ref={ref1} data-testid="inside1">
+          one
+        </div>
+        <div ref={attachSecond ? ref2 : undefined} data-testid="inside2">
+          two
+        </div>
+        <div data-testid="outside">outside</div>
+      </div>
+    );
+  }
+
+  it("dismisses only when outside all refs (array form)", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(<MultiRefComponent onDismiss={fn} />);
+    fireEvent.pointerDown(getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(1);
+    fireEvent.pointerDown(getByTestId("inside1"));
+    fireEvent.pointerDown(getByTestId("inside2"));
+    expect(fn).toHaveBeenCalledTimes(1);
+    fireEvent.pointerDown(getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it("handles a null ref inside the array without throwing", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(
+      <MultiRefComponent onDismiss={fn} attachSecond={false} />,
+    );
+    expect(() =>
+      fireEvent.pointerDown(getByTestId("outside")),
+    ).not.toThrow();
+    expect(fn).toHaveBeenCalledTimes(1);
+    fireEvent.pointerDown(getByTestId("inside1"));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // Ignore option
+  // -------------------------------------------------------------------------
+  function IgnoreComponent({
+    onDismiss,
+    ignore,
+  }: {
+    onDismiss: () => void;
+    ignore?: "single" | "array" | "null";
+  }) {
+    const ref = useRef<HTMLDivElement>(null);
+    const toggleRef = useRef<HTMLButtonElement>(null);
+    const otherRef = useRef<HTMLButtonElement>(null);
+    const unattachedRef = useRef<HTMLButtonElement>(null);
+    const ignoreOption =
+      ignore === "array"
+        ? [toggleRef, otherRef]
+        : ignore === "null"
+          ? unattachedRef
+          : toggleRef;
+    useDismiss(ref, onDismiss, { ignore: ignoreOption });
+    return (
+      <div>
+        <div ref={ref} data-testid="inside">
+          inside
+        </div>
+        <button ref={toggleRef} data-testid="toggle">
+          toggle
+        </button>
+        <button ref={otherRef} data-testid="other">
+          other
+        </button>
+        <div data-testid="outside">outside</div>
+      </div>
+    );
+  }
+
+  it("does not dismiss on click inside a single ignored ref", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(
+      <IgnoreComponent onDismiss={fn} ignore="single" />,
+    );
+    fireEvent.pointerDown(getByTestId("toggle"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.pointerDown(getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not dismiss on click inside either ignored ref (array form)", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(
+      <IgnoreComponent onDismiss={fn} ignore="array" />,
+    );
+    fireEvent.pointerDown(getByTestId("toggle"));
+    fireEvent.pointerDown(getByTestId("other"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.pointerDown(getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("still dismisses inside the main ref with ignore set", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(
+      <IgnoreComponent onDismiss={fn} ignore="single" />,
+    );
+    fireEvent.pointerDown(getByTestId("inside"));
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("ignores a null ignored ref and still dismisses outside", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(
+      <IgnoreComponent onDismiss={fn} ignore="null" />,
+    );
+    expect(() =>
+      fireEvent.pointerDown(getByTestId("outside")),
+    ).not.toThrow();
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
 });

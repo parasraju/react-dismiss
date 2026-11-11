@@ -59,7 +59,7 @@ export function Dropdown() {
 
 ```ts
 useDismiss<T extends HTMLElement>(
-  ref: React.RefObject<T | null>,
+  ref: React.RefObject<T | null> | React.RefObject<T | null>[],
   onDismiss: () => void,
   options?: UseDismissOptions
 ): void
@@ -67,13 +67,14 @@ useDismiss<T extends HTMLElement>(
 
 ### Arguments
 
-- `ref`: `React.RefObject<T | null>` — React ref attached to the element considered "inside".
+- `ref`: `React.RefObject<T | null>` or an array of them — React ref(s) attached to the element(s) considered "inside". Dismissal runs only when the interaction is outside all of them.
 - `onDismiss`: `() => void` — Callback invoked when dismissal triggers. Ref-stable internally so inline callbacks do not re-bind listeners.
 - `options`: `UseDismissOptions` (optional object):
   - `enabled` (`boolean`, default: `true`): Master toggle to enable or disable dismissal listeners.
   - `outside` (`boolean`, default: `true`): Whether outside pointer/click interactions trigger dismissal.
   - `escape` (`boolean`, default: `true`): Whether pressing the `Escape` key triggers dismissal.
   - `event` (`"pointerdown" | "click"`, default: `"pointerdown"`): DOM event used for outside interaction detection.
+  - `ignore` (`React.RefObject<HTMLElement | null>` or an array of them): Refs whose clicks never trigger dismissal, e.g. a toggle button outside the dismissed element.
 
 ### Returns
 
