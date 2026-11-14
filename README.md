@@ -115,9 +115,29 @@ Ships with built-in TypeScript declarations and generics (`dist/index.d.ts`), no
 ## Why This One
 
 - **Zero dependencies**: Only requires `react` (>= 18) as a peer dependency.
-- **Tiny footprint**: ~1.3 KB uncompressed ESM/CJS build (< 1 KB minified + gzipped).
+- **Tiny footprint**: ~1.7 KB uncompressed ESM/CJS build (< 1 KB minified + gzipped).
 - **Ref-stable callback**: Passing inline callback functions will not re-bind document listeners on re-render.
 - One hook, not a hook library — no need to install a whole utilities package for a single outside-click handler.
+
+## react-dismiss vs react-use vs ahooks
+
+Looking for a useClickAway alternative? This click outside hook comparison covers the differences that matter when you only need dismiss behavior. The competitor columns come from each package's own documentation and published metadata, checked on November 14, 2026; the `react-dismiss` column comes from this package's source.
+
+| | react-dismiss | react-use | ahooks |
+| --- | --- | --- | --- |
+| What you install | One hook (`useDismiss`) | Full hooks library (`useClickAway` is one of many hooks) | Full hooks library (`useClickAway` is one of many hooks) |
+| Dependencies | 0 | 14 | 8 |
+| Install size (measured build / whole library unpacked) | ~1.7 KB build output (ESM 1.70 KB, CJS 1.73 KB, uncompressed) | ~454 kB whole library | ~630 kB whole library |
+| Hook name | `useDismiss` | `useClickAway` | `useClickAway` |
+| Multiple refs | Yes — one ref or an array of refs | No — one ref per call | Yes — one target or an array of targets |
+| Ignore option | Yes — `ignore` accepts one ref or an array | No | No |
+| Escape handling | Yes — `keydown` with `Escape` | No | No |
+| Event listened to | `pointerdown` by default; configurable to `click` | `mousedown` and `touchstart` by default; configurable event list | `click` by default; configurable event name(s) |
+| SSR guard | Yes — explicit `typeof document === "undefined"` check inside the effect | Client-side `useEffect` only; no explicit guard | Client-side `useEffect` only; no explicit guard |
+
+The `react-dismiss` size is the measured uncompressed build output. The `react-use` and `ahooks` sizes are each package's whole-library unpacked size from the npm registry, not the size of `useClickAway` alone — tree-shaking and bundling determine what you actually ship, so treat those numbers as the scope of the install, not a per-hook cost.
+
+When to pick each one: choose `react-dismiss` when dismiss-on-outside-interaction or Escape is the only behavior you need and you would rather not add a full hook library. Choose `react-use` or `ahooks` when you already use that library for many other hooks and want one dependency for all of them. In this `react-dismiss` vs `react-use` vs `ahooks` comparison, the trade-off is focus versus breadth, not correctness: all three packages detect outside clicks, and `ahooks` also supports multiple targets, just as `react-dismiss` does.
 
 ## Links
 

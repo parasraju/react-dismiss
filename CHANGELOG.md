@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0] - 2026-11-14
+
+- Added a comparison table vs react-use and ahooks to the README, sourced from each package's own documentation and published metadata (checked 2026-11-14).
+- Added the `click-outside-hook` keyword.
+- Corrected the measured build-size claim from ~1.3 KB to ~1.7 KB uncompressed (re-measured: ESM 1.70 KB, CJS 1.73 KB).
+
 ## 0.2.1
 
 - Implemented multiple refs: the first argument now accepts one ref or several; dismissal runs only when the interaction is outside all of them.
