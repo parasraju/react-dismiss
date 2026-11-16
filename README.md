@@ -112,6 +112,20 @@ useDismiss(menuRef, () => setIsOpen(false), {
 
 Ships with built-in TypeScript declarations and generics (`dist/index.d.ts`), no extra `@types` packages required.
 
+### TypeScript generics — typed refs, StrictMode-safe
+
+`useDismiss` is a typescript generic hook. Pass the element type and a typed ref; no cast.
+
+```tsx
+const menuRef = useRef<HTMLDivElement>(null);
+
+useDismiss<HTMLDivElement>(menuRef, () => setIsOpen(false));
+```
+
+Listeners are registered in an effect and removed in its cleanup, so this react strict mode hook does not leak or double-register across a StrictMode remount.
+
+`tsc --noEmit` passes with `strict: true`.
+
 ## Why This One
 
 - **Zero dependencies**: Only requires `react` (>= 18) as a peer dependency.
@@ -144,3 +158,7 @@ When to pick each one: choose `react-dismiss` when dismiss-on-outside-interactio
 - **Live Demo**: [codesandbox.io/s/xzwc87](https://codesandbox.io/s/xzwc87)
 - **npm**: [npmjs.com/package/react-dismiss](https://www.npmjs.com/package/react-dismiss)
 - **GitHub**: [github.com/parasraju/react-dismiss](https://github.com/parasraju/react-dismiss)
+
+## 0.4.0
+
+TypeScript generics polish — generic element type, fully typed options, StrictMode-safe, `strict: true` clean.
