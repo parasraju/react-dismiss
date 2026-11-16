@@ -1,7 +1,7 @@
 {
   "name": "react-dismiss",
-  "version": "0.3.0",
-  "description": "Tiny React hook that dismisses dropdowns, popovers and modals on outside click or Escape — multiple refs and an ignore option, zero dependencies.",
+  "version": "0.4.0",
+  "description": "Tiny React hook that dismisses dropdowns, popovers and modals on outside click or Escape — multiple refs and an ignore option, zero dependencies. Fully typed with generics and StrictMode-safe.",
   "keywords": [
     "react",
     "react-hook",
@@ -18,7 +18,9 @@
     "useDismiss",
     "useClickOutside",
     "escape",
-    "click-outside-hook"
+    "click-outside-hook",
+    "generics",
+    "strict-mode"
   ],
   "license": "MIT",
   "author": "",
