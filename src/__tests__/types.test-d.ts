@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { useDismiss } from "../index.js";
+import { useDismiss, useDismissAll } from "../index.js";
 
 declare const onDismiss: () => void;
 
@@ -17,4 +17,9 @@ export function ButtonRefAccepted(ref: RefObject<HTMLButtonElement>): void {
 export function MismatchedRefRejected(ref: RefObject<HTMLButtonElement>): void {
   // @ts-expect-error button ref is not a div
   useDismiss<HTMLDivElement>(ref, onDismiss);
+}
+
+export function DismissAllReturnsANoArgCallback(): void {
+  const dismissAll: () => void = useDismissAll();
+  dismissAll();
 }
