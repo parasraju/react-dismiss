@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { UseDismissOptions } from "./types.js";
+import { registerDismiss } from "./useDismissAll.js";
 
 export function useDismiss<T extends HTMLElement>(
   ref:
@@ -81,4 +82,11 @@ export function useDismiss<T extends HTMLElement>(
       }
     };
   }, [ref, ignore, enabled, outside, escape, event]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    return registerDismiss(() => {
+      onDismissRef.current();
+    });
+  }, [enabled]);
 }

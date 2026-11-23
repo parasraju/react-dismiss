@@ -98,6 +98,40 @@ useDismiss(menuRef, () => setIsOpen(false), {
 });
 ```
 
+### useDismissAll — dismiss every open popover at once
+
+`useDismissAll()` returns a stable `dismissAll` function. One call can dismiss all popovers and close all dropdowns that are currently open.
+
+```tsx
+import { useRef, useState } from "react";
+import { useDismiss, useDismissAll } from "react-dismiss";
+
+export function AppShell() {
+  const dismissAll = useDismissAll();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(true);
+  const [pickerOpen, setPickerOpen] = useState(true);
+
+  useDismiss(menuRef, () => setMenuOpen(false));
+  useDismiss(pickerRef, () => setPickerOpen(false));
+
+  return (
+    <>
+      <button type="button" onClick={() => dismissAll()}>
+        Close all
+      </button>
+      {menuOpen ? <div ref={menuRef}>Menu</div> : null}
+      {pickerOpen ? <div ref={pickerRef}>Date picker</div> : null}
+    </>
+  );
+}
+```
+
+An instance with `enabled: false` is not dismissed.
+
+Each instance registers on mount and unregisters in effect cleanup, so a StrictMode remount does not leak or call `onDismiss` twice for one `dismissAll`.
+
 ## What It Handles
 
 - Outside interactions (`pointerdown` or `click`) while ignoring clicks on descendants inside `ref`.
@@ -162,3 +196,7 @@ When to pick each one: choose `react-dismiss` when dismiss-on-outside-interactio
 ## 0.4.0
 
 TypeScript generics polish — generic element type, fully typed options, StrictMode-safe, `strict: true` clean.
+
+## 0.5.0
+
+New hook useDismissAll — one call dismisses every open popover (enabled instances only).
