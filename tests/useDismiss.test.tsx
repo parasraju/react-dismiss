@@ -1,4 +1,5 @@
 import { StrictMode, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { render, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { useDismiss } from "../src/index.js";
@@ -460,9 +461,7 @@ describe("useDismiss", () => {
     const { getByTestId } = render(
       <MultiRefComponent onDismiss={fn} attachSecond={false} />,
     );
-    expect(() =>
-      fireEvent.pointerDown(getByTestId("outside")),
-    ).not.toThrow();
+    expect(() => fireEvent.pointerDown(getByTestId("outside"))).not.toThrow();
     expect(fn).toHaveBeenCalledTimes(1);
     fireEvent.pointerDown(getByTestId("inside1"));
     expect(fn).toHaveBeenCalledTimes(1);
@@ -507,9 +506,7 @@ describe("useDismiss", () => {
 
   it("does not dismiss on click inside a single ignored ref", () => {
     const fn = vi.fn();
-    const { getByTestId } = render(
-      <IgnoreComponent onDismiss={fn} ignore="single" />,
-    );
+    const { getByTestId } = render(<IgnoreComponent onDismiss={fn} ignore="single" />);
     fireEvent.pointerDown(getByTestId("toggle"));
     expect(fn).not.toHaveBeenCalled();
     fireEvent.pointerDown(getByTestId("outside"));
@@ -518,9 +515,7 @@ describe("useDismiss", () => {
 
   it("does not dismiss on click inside either ignored ref (array form)", () => {
     const fn = vi.fn();
-    const { getByTestId } = render(
-      <IgnoreComponent onDismiss={fn} ignore="array" />,
-    );
+    const { getByTestId } = render(<IgnoreComponent onDismiss={fn} ignore="array" />);
     fireEvent.pointerDown(getByTestId("toggle"));
     fireEvent.pointerDown(getByTestId("other"));
     expect(fn).not.toHaveBeenCalled();
@@ -530,21 +525,195 @@ describe("useDismiss", () => {
 
   it("still dismisses inside the main ref with ignore set", () => {
     const fn = vi.fn();
-    const { getByTestId } = render(
-      <IgnoreComponent onDismiss={fn} ignore="single" />,
-    );
+    const { getByTestId } = render(<IgnoreComponent onDismiss={fn} ignore="single" />);
     fireEvent.pointerDown(getByTestId("inside"));
     expect(fn).not.toHaveBeenCalled();
   });
 
   it("ignores a null ignored ref and still dismisses outside", () => {
     const fn = vi.fn();
-    const { getByTestId } = render(
-      <IgnoreComponent onDismiss={fn} ignore="null" />,
+    const { getByTestId } = render(<IgnoreComponent onDismiss={fn} ignore="null" />);
+    expect(() => fireEvent.pointerDown(getByTestId("outside"))).not.toThrow();
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  // -------------------------------------------------------------------------
+  // Portal option
+  // -------------------------------------------------------------------------
+  function PortalPopover({
+    onDismiss,
+    options,
+    withPortalOption = true,
+    attachPortal = true,
+    mountPortal = true,
+    ignoreToggle = false,
+  }: {
+    onDismiss: () => void;
+    options?: UseDismissOptions;
+    withPortalOption?: boolean;
+    attachPortal?: boolean;
+    mountPortal?: boolean;
+    ignoreToggle?: boolean;
+  }) {
+    const anchorRef = useRef<HTMLDivElement>(null);
+    const portalRef = useRef<HTMLDivElement>(null);
+    const toggleRef = useRef<HTMLButtonElement>(null);
+    useDismiss(anchorRef, onDismiss, {
+      ...options,
+      ...(withPortalOption ? { portal: portalRef } : {}),
+      ...(ignoreToggle ? { ignore: toggleRef } : {}),
+    });
+    return (
+      <div>
+        <div ref={anchorRef} data-testid="anchor">
+          <span data-testid="anchor-child">anchor</span>
+        </div>
+        {mountPortal
+          ? createPortal(
+              <div
+                ref={attachPortal ? portalRef : undefined}
+                data-testid="portal-content"
+              >
+                <span data-testid="portal-child">portal</span>
+              </div>,
+              document.body,
+            )
+          : null}
+        <button ref={toggleRef} type="button" data-testid="toggle">
+          toggle
+        </button>
+        <div data-testid="outside">outside</div>
+      </div>
     );
-    expect(() =>
-      fireEvent.pointerDown(getByTestId("outside")),
-    ).not.toThrow();
+  }
+
+  it("does not dismiss on a click inside portal content", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(<PortalPopover onDismiss={fn} />);
+    const portal = getByTestId("portal-content");
+    const anchor = getByTestId("anchor");
+    expect(anchor.contains(portal)).toBe(false);
+    expect(document.body.contains(portal)).toBe(true);
+    fireEvent.pointerDown(portal);
+    fireEvent.pointerDown(getByTestId("portal-child"));
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("dismisses on a click outside both the main ref and the portal content", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(<PortalPopover onDismiss={fn} />);
+    fireEvent.pointerDown(getByTestId("anchor"));
+    fireEvent.pointerDown(getByTestId("anchor-child"));
+    fireEvent.pointerDown(getByTestId("portal-content"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.pointerDown(getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats a null portal ref as absent and keeps main-ref behaviour", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(<PortalPopover onDismiss={fn} attachPortal={false} />);
+    expect(() => fireEvent.pointerDown(getByTestId("portal-content"))).not.toThrow();
+    // The portal node is mounted, but its ref is null, so it is not inside.
+    expect(fn).toHaveBeenCalledTimes(1);
+    fn.mockClear();
+    fireEvent.pointerDown(getByTestId("anchor"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.pointerDown(getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats an unmounted portal as absent without throwing", () => {
+    const fn = vi.fn();
+    const view = render(<PortalPopover onDismiss={fn} />);
+    view.rerender(<PortalPopover onDismiss={fn} mountPortal={false} />);
+    expect(view.queryByTestId("portal-content")).toBeNull();
+    expect(() => fireEvent.pointerDown(view.getByTestId("outside"))).not.toThrow();
+    expect(fn).toHaveBeenCalledTimes(1);
+    fn.mockClear();
+    fireEvent.pointerDown(view.getByTestId("anchor"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.pointerDown(view.getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("with portal unset, a click inside createPortal content dismisses (v0.5.0 behaviour)", () => {
+    // Confirmed before the option existed: this click called onDismiss once.
+    // The portal node sits on document.body, outside the anchor, so contains()
+    // treats it as an outside click. Old outside-click tests are unchanged.
+    const fn = vi.fn();
+    const { getByTestId } = render(
+      <PortalPopover onDismiss={fn} withPortalOption={false} />,
+    );
+    const portal = getByTestId("portal-content");
+    expect(getByTestId("anchor").contains(portal)).toBe(false);
+    fireEvent.pointerDown(portal);
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("still dismisses on Escape when a portal is mounted", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(<PortalPopover onDismiss={fn} />);
+    fireEvent.pointerDown(getByTestId("portal-content"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not dismiss a disabled instance when a portal is mounted", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(
+      <PortalPopover onDismiss={fn} options={{ enabled: false }} />,
+    );
+    fireEvent.pointerDown(getByTestId("portal-content"));
+    fireEvent.pointerDown(getByTestId("outside"));
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("does not dismiss on an ignored ref when portal is also set", () => {
+    const fn = vi.fn();
+    const { getByTestId } = render(<PortalPopover onDismiss={fn} ignoreToggle />);
+    fireEvent.pointerDown(getByTestId("toggle"));
+    fireEvent.pointerDown(getByTestId("portal-content"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.pointerDown(getByTestId("outside"));
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not dismiss on a click inside either portal ref (array form)", () => {
+    const fn = vi.fn();
+    function TwoPortals() {
+      const anchorRef = useRef<HTMLDivElement>(null);
+      const firstRef = useRef<HTMLDivElement>(null);
+      const secondRef = useRef<HTMLDivElement>(null);
+      useDismiss(anchorRef, fn, { portal: [firstRef, secondRef] });
+      return (
+        <div>
+          <div ref={anchorRef} data-testid="anchor">
+            anchor
+          </div>
+          {createPortal(
+            <div ref={firstRef} data-testid="portal-a">
+              a
+            </div>,
+            document.body,
+          )}
+          {createPortal(
+            <div ref={secondRef} data-testid="portal-b">
+              b
+            </div>,
+            document.body,
+          )}
+          <div data-testid="outside">outside</div>
+        </div>
+      );
+    }
+    const { getByTestId } = render(<TwoPortals />);
+    fireEvent.pointerDown(getByTestId("portal-a"));
+    fireEvent.pointerDown(getByTestId("portal-b"));
+    expect(fn).not.toHaveBeenCalled();
+    fireEvent.pointerDown(getByTestId("outside"));
     expect(fn).toHaveBeenCalledTimes(1);
   });
 });

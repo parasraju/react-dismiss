@@ -26,4 +26,12 @@ export interface UseDismissOptions {
   ignore?:
     | React.RefObject<HTMLElement | null>
     | React.RefObject<HTMLElement | null>[];
+  /**
+   * Portal content that counts as inside. Accepts one ref or several.
+   * A click inside any of them does not dismiss. A null or unmounted ref
+   * is treated as absent. Unset leaves outside-click behaviour unchanged.
+   */
+  portal?:
+    | React.RefObject<HTMLElement | null>
+    | React.RefObject<HTMLElement | null>[];
 }

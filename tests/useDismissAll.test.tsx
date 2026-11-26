@@ -1,4 +1,5 @@
 import { StrictMode, useRef } from "react";
+import { createPortal } from "react-dom";
 import { render, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useDismiss, useDismissAll } from "../src/index.js";
@@ -184,5 +185,40 @@ describe("useDismissAll", () => {
     fireEvent.click(view.getByRole("button"));
     expect(onMenu).toHaveBeenCalledTimes(1);
     expect(onPicker).toHaveBeenCalledTimes(1);
+  });
+
+  it("dismisses a portal-using instance exactly once per call", () => {
+    const onDismiss = vi.fn();
+
+    function PortaledPopover() {
+      const anchorRef = useRef<HTMLDivElement>(null);
+      const portalRef = useRef<HTMLDivElement>(null);
+      useDismiss(anchorRef, onDismiss, { portal: portalRef });
+      return (
+        <>
+          <div ref={anchorRef} data-testid="anchor" />
+          {createPortal(
+            <div ref={portalRef} data-testid="portal-content" />,
+            document.body,
+          )}
+        </>
+      );
+    }
+
+    const { getByRole, getByTestId } = render(
+      <>
+        <DismissAllButton />
+        <PortaledPopover />
+      </>,
+    );
+
+    fireEvent.pointerDown(getByTestId("portal-content"));
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    fireEvent.click(getByRole("button"));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(getByRole("button"));
+    expect(onDismiss).toHaveBeenCalledTimes(2);
   });
 });

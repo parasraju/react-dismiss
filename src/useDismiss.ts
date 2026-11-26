@@ -15,6 +15,7 @@ export function useDismiss<T extends HTMLElement>(
     escape = true,
     event = "pointerdown",
     ignore,
+    portal,
   } = options;
 
   const onDismissRef = useRef(onDismiss);
@@ -40,6 +41,12 @@ export function useDismiss<T extends HTMLElement>(
         : Array.isArray(ignore)
           ? ignore
           : [ignore];
+    const portalRefs =
+      portal === undefined
+        ? []
+        : Array.isArray(portal)
+          ? portal
+          : [portal];
 
     const handleOutside = (e: Event) => {
       const target = e.target;
@@ -52,6 +59,12 @@ export function useDismiss<T extends HTMLElement>(
       if (elements.length === 0) return;
       // Inside any ref: not a dismissal.
       if (elements.some((el) => el.contains(target))) return;
+      // Inside portal content: counts as inside. Null or unmounted refs
+      // are absent, so they add no extra "inside" and cannot throw.
+      const portalElements = portalRefs
+        .map((r) => r.current)
+        .filter((el): el is HTMLElement => el !== null);
+      if (portalElements.some((el) => el.contains(target))) return;
       // Inside an ignored ref: never dismiss.
       const ignored = ignoreRefs
         .map((r) => r.current)
@@ -81,7 +94,7 @@ export function useDismiss<T extends HTMLElement>(
         document.removeEventListener("keydown", handleKeyDown);
       }
     };
-  }, [ref, ignore, enabled, outside, escape, event]);
+  }, [ref, ignore, portal, enabled, outside, escape, event]);
 
   useEffect(() => {
     if (!enabled) return;

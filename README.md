@@ -75,6 +75,7 @@ useDismiss<T extends HTMLElement>(
   - `escape` (`boolean`, default: `true`): Whether pressing the `Escape` key triggers dismissal.
   - `event` (`"pointerdown" | "click"`, default: `"pointerdown"`): DOM event used for outside interaction detection.
   - `ignore` (`React.RefObject<HTMLElement | null>` or an array of them): Refs whose clicks never trigger dismissal, e.g. a toggle button outside the dismissed element.
+  - `portal` (`React.RefObject<HTMLElement | null>` or an array of them): Portal content that counts as inside. A click inside it does not dismiss. A null or unmounted ref is treated as absent. Unset by default, which leaves outside-click behaviour unchanged.
 
 ### Returns
 
@@ -97,6 +98,35 @@ useDismiss(menuRef, () => setIsOpen(false), {
   ignore: toggleRef,
 });
 ```
+
+### Portal support — clicks inside a React portal don't dismiss
+
+A popover rendered with `createPortal` mounts outside the anchor, so a click on that content is an outside click unless you pass its ref. Set `portal` to the portal content ref and a click inside that React portal does not dismiss.
+
+```tsx
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useDismiss } from "react-dismiss";
+
+export function PortaledPopover() {
+  const [isOpen, setIsOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
+
+  useDismiss(anchorRef, () => setIsOpen(false), { portal: portalRef });
+
+  return (
+    <div ref={anchorRef}>
+      <button onClick={() => setIsOpen((prev) => !prev)}>Toggle</button>
+      {isOpen ? createPortal(<div ref={portalRef}>Popover</div>, document.body) : null}
+    </div>
+  );
+}
+```
+
+A null or unmounted portal ref is treated as absent: nothing throws, and the main ref check is unchanged.
+
+Without the `portal` option, behaviour is unchanged from v0.5.0.
 
 ### useDismissAll — dismiss every open popover at once
 
@@ -137,6 +167,7 @@ Each instance registers on mount and unregisters in effect cleanup, so a StrictM
 - Outside interactions (`pointerdown` or `click`) while ignoring clicks on descendants inside `ref`.
 - Multiple refs: dismissal runs only when the interaction is outside all of them.
 - Ignore option: clicks on ignored refs never dismiss.
+- Portal option: a click inside a React portal passed as `portal` does not count as an outside click. Unset, outside-click behaviour is unchanged.
 - Escape key presses (`keydown` where `event.key === "Escape"`).
 - Null or unmounted refs without throwing errors.
 - Automatic event listener cleanup on component unmount or when options change.
@@ -200,3 +231,7 @@ TypeScript generics polish — generic element type, fully typed options, Strict
 ## 0.5.0
 
 New hook useDismissAll — one call dismisses every open popover (enabled instances only).
+
+## 0.6.0
+
+Portal support — clicks inside a React portal no longer dismiss (new option, default behaviour unchanged).

@@ -23,3 +23,11 @@ export function DismissAllReturnsANoArgCallback(): void {
   const dismissAll: () => void = useDismissAll();
   dismissAll();
 }
+
+export function PortalOptionAccepted(
+  ref: RefObject<HTMLDivElement>,
+  portalRef: RefObject<HTMLElement>,
+): void {
+  useDismiss(ref, onDismiss, { portal: portalRef });
+  useDismiss(ref, onDismiss, { portal: [portalRef] });
+}
